@@ -1,8 +1,10 @@
 '''
 NLPPA: Natural Language Processing Presentation Assistant
-UPDATED IN 02/05/2024 by /goktuggokce
+UPDATED IN 19/05/2024 by /goktuggokce
 '''
 import speech_recognition as sr
+import openai
+openai.api_key = 'sk-proj-odoR6qtGvaUzbHD5EodwT3BlbkFJbPqvzKHBhlE2woFTeTXs '
 
 _TestRawList = ["AI (Artificial Intelligent) nedir?",
                 "Yapay zeka tarihçesinin anlatımı",
@@ -67,18 +69,37 @@ def Running(_RefinedList):
 
     def DetectSubject(_RefinedAudio):
         def ConnectGPT(_Input):
-            _Answer = None
-            return _Answer
-        _Answer = ConnectGPT(_Input=_RefinedAudio)
-        if _Answer in [_TestRawList]:
-            return _Answer
-        return None
+            _Answer = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": _Input}
+                ],
+                max_tokens=100
+            )
+            return(_Answer.choices[0].message['content'].strip())
+        _Input = _RefinedAudio + "\n"
+        i = 0
+        for x in _RefinedList:
+            _Input += f"{i}) {x}\n"
+            i += 1
+        _Input += ("Bahsettiğim bu konu saydığım konulardan biri ile eşleşiyor mu? "
+                   "Mümkün olduğunca seçici ol. Eğer eşleşiyorsa sadece eşleşen maddeyi ver. "
+                   "Eşleşmediği durumda sadece None çıktısını ver.")
+        print(_Input)
+        _Answer = ConnectGPT(_Input=_Input)
+        #if _Answer in [_TestRawList]:
+        #    return _Answer
+        #return None
+        return _Answer
 
-    i = 1
+    i = 0
     for x in _RefinedList:
         print(i, " ", x, "\n")
         i += 1
-
+    _RefinedAudio = RecordAudio()
+    print(DetectSubject(_RefinedAudio))
+    '''
     _SubjectCounter = 0
     while (_SubjectCounter <= len(_RefinedList)):
         _RefinedAudio = RecordAudio()
@@ -93,5 +114,6 @@ def Running(_RefinedList):
         _MentionedList.append(_MentionedSubjectIndex)
         _SubjectCounter = _MentionedSubjectIndex
         _Recommendation = Find_Recommendation(_SubjectCounter, _RefinedList)
+    '''
 
 Main()
